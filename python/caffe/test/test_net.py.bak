@@ -48,8 +48,8 @@ class TestNet(unittest.TestCase):
     def test_memory(self):
         """Check that holding onto blob data beyond the life of a Net is OK"""
 
-        params = sum(list(map(list, six.itervalues(self.net.params))), [])
-        blobs = list(self.net.blobs.values())
+        params = sum(map(list, six.itervalues(self.net.params)), [])
+        blobs = self.net.blobs.values()
         del self.net
 
         # now sum everything (forcing all memory to be read)

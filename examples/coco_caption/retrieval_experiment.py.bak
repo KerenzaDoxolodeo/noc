@@ -4,7 +4,7 @@ from collections import OrderedDict
 import json
 import numpy as np
 import pprint
-import pickle as pickle
+import cPickle as pickle
 import string
 import sys
 
@@ -29,15 +29,15 @@ class CaptionExperiment():
     for d in [dataset_cache_dir, cache_dir]:
       if not os.path.exists(d): os.makedirs(d)
     self.dataset = dataset
-    self.images = list(dataset.keys())
+    self.images = dataset.keys()
     self.init_caption_list(dataset)
     self.caption_scores = [None] * len(self.images)
-    print('Initialized caption experiment: %d images, %d captions' % \
-        (len(self.images), len(self.captions)))
+    print 'Initialized caption experiment: %d images, %d captions' % \
+        (len(self.images), len(self.captions))
 
   def init_caption_list(self, dataset):
     self.captions = []
-    for image, captions in dataset.items():
+    for image, captions in dataset.iteritems():
       for caption, _ in captions:
         self.captions.append({'source_image': image, 'caption': caption})
     # Sort by length for performance.
@@ -98,7 +98,7 @@ class CaptionExperiment():
   def eval_recall(self, scores, methods=None, neg_prefix='negative_'):
     if methods is None:
       # rank on all stats, and all their inverses
-      methods = list(scores[0]['stats'].keys())
+      methods = scores[0]['stats'].keys()
       methods += [neg_prefix + method for method in methods]
     correct_ranks = {}
     for method in methods:
@@ -119,7 +119,7 @@ class CaptionExperiment():
   def recall_results(self, correct_ranks, recall_ranks=[]):
     num_instances = float(len(correct_ranks))
     assert num_instances > 0
-    methods = list(correct_ranks[0].keys())
+    methods = correct_ranks[0].keys()
     results = {}
     for method in methods:
        method_correct_ranks = \
@@ -136,20 +136,20 @@ class CaptionExperiment():
     return results
 
   def print_recall_results(self, results):
-    for method, result in results.items():
-      print('Ranking method:', method)
-      for metric_name_and_value in result.items():
-        print('    %s: %f' % metric_name_and_value)
+    for method, result in results.iteritems():
+      print 'Ranking method:', method
+      for metric_name_and_value in result.iteritems():
+        print '    %s: %f' % metric_name_and_value
 
   def retrieval_experiment(self):
     # Compute image descriptors.
-    print('Computing image descriptors')
+    print 'Computing image descriptors'
     self.compute_descriptors()
 
     num_images, num_captions = len(self.images), len(self.captions)
 
     # For each image, score all captions.
-    for image_index in range(num_images):
+    for image_index in xrange(num_images):
       sys.stdout.write("\rScoring captions for image %d/%d" %
                        (image_index, num_images))
       sys.stdout.flush()
@@ -157,7 +157,7 @@ class CaptionExperiment():
     sys.stdout.write('\n')
 
     # Compute global caption statistics for normalization.
-    for caption_index in range(num_captions):
+    for caption_index in xrange(num_captions):
       self.normalize_caption_scores(caption_index)
 
     recall_ranks = [1, 5, 10, 50]
@@ -165,7 +165,7 @@ class CaptionExperiment():
     eval_methods = ['negative_normalized_log_p']
     # Evaluate caption-to-image retrieval task.
     self.caption_to_image_ranks = [None] * num_captions
-    for caption_index in range(num_captions):
+    for caption_index in xrange(num_captions):
       sys.stdout.write("\rCaption-to-image evaluation: "
                        "computing recall for caption %d/%d" %
                        (caption_index, num_captions))
@@ -175,12 +175,12 @@ class CaptionExperiment():
     sys.stdout.write('\n')
     self.caption_to_image_recall = \
          self.recall_results(self.caption_to_image_ranks, recall_ranks)
-    print('Caption-to-image retrieval results:')
+    print 'Caption-to-image retrieval results:'
     self.print_recall_results(self.caption_to_image_recall)
 
     # Evaluate image-to-caption retrieval task.
     self.image_to_caption_ranks = [None] * num_images
-    for image_index in range(num_images):
+    for image_index in xrange(num_images):
       sys.stdout.write("\rImage-to-caption evaluation: "
                        "computing recall for image %d/%d" %
                        (image_index, num_images))
@@ -190,12 +190,12 @@ class CaptionExperiment():
     sys.stdout.write('\n')
     self.image_to_caption_recall = \
         self.recall_results(self.image_to_caption_ranks, recall_ranks)
-    print('Image-to-caption retrieval results:')
+    print 'Image-to-caption retrieval results:'
     self.print_recall_results(self.image_to_caption_recall)
 
   def generation_experiment(self, strategy, max_batch_size=1000):
     # Compute image descriptors.
-    print('Computing image descriptors')
+    print 'Computing image descriptors'
     self.compute_descriptors()
 
     do_batches = (strategy['type'] == 'beam' and strategy['beam_size'] == 1) or \
@@ -208,7 +208,7 @@ class CaptionExperiment():
 
     # Generate captions for all images.
     all_captions = [None] * num_images
-    for image_index in range(0, num_images, batch_size):
+    for image_index in xrange(0, num_images, batch_size):
       batch_end_index = min(image_index + batch_size, num_images)
       sys.stdout.write("\rGenerating captions for image %d/%d" %
                        (image_index, num_images))
@@ -221,11 +221,11 @@ class CaptionExperiment():
           temp = strategy['temp'] if 'temp' in strategy else 1
         output_captions, output_probs = self.captioner.sample_captions(
             self.descriptors[image_index:batch_end_index], temp=temp)
-        for batch_index, output in zip(list(range(image_index, batch_end_index)),
+        for batch_index, output in zip(range(image_index, batch_end_index),
                                        output_captions):
           all_captions[batch_index] = output
       else:
-        for batch_image_index in range(image_index, batch_end_index):
+        for batch_image_index in xrange(image_index, batch_end_index):
           captions, caption_probs = self.captioner.predict_caption(
               self.descriptors[batch_image_index], strategy=strategy)
           best_caption, max_log_prob = None, None
@@ -240,7 +240,7 @@ class CaptionExperiment():
     # Compute the number of reference files as the maximum number of ground
     # truth captions of any image in the dataset.
     num_reference_files = 0
-    for captions in list(self.dataset.values()):
+    for captions in self.dataset.values():
       if len(captions) > num_reference_files:
         num_reference_files = len(captions)
     if num_reference_files <= 0:
@@ -253,7 +253,7 @@ class CaptionExperiment():
       os.makedirs(exp_dir)
     # For each image, write out the highest probability caption.
     model_captions = [''] * len(self.images)
-    reference_captions = [([''] * len(self.images)) for _ in range(num_reference_files)]
+    reference_captions = [([''] * len(self.images)) for _ in xrange(num_reference_files)]
     for image_index, image in enumerate(self.images):
       caption = self.captioner.sentence(all_captions[image_index])
       model_captions[image_index] = caption
@@ -268,7 +268,7 @@ class CaptionExperiment():
       'caption': model_captions[image_index]
     } for (image_index, image_path) in enumerate(self.images)]
     json_filename = '%s/generation_result.json' % self.cache_dir
-    print('Dumping result to file: %s' % json_filename)
+    print 'Dumping result to file: %s' % json_filename
     with open(json_filename, 'w') as json_file:
       json.dump(generation_result, json_file)
     generation_result = self.sg.coco.loadRes(json_filename)
@@ -331,16 +331,16 @@ def main():
     if image_path not in dataset:
       dataset[image_path] = []
     dataset[image_path].append((sg.line_to_stream(sentence), sentence))
-  print('Original dataset contains %d images' % len(list(dataset.keys())))
-  if 0 <= MAX_IMAGES < len(list(dataset.keys())):
-    all_keys = list(dataset.keys())
+  print 'Original dataset contains %d images' % len(dataset.keys())
+  if 0 <= MAX_IMAGES < len(dataset.keys()):
+    all_keys = dataset.keys()
     perm = np.random.permutation(len(all_keys))[:MAX_IMAGES]
     chosen_keys = set([all_keys[p] for p in perm])
     for key in all_keys:
       if key not in chosen_keys:
         del dataset[key]
-    print('Reduced dataset to %d images' % len(list(dataset.keys())))
-  if MAX_IMAGES < 0: MAX_IMAGES = len(list(dataset.keys()))
+    print 'Reduced dataset to %d images' % len(dataset.keys())
+  if MAX_IMAGES < 0: MAX_IMAGES = len(dataset.keys())
   captioner = Captioner(MODEL_FILE, IMAGE_NET_FILE, LSTM_NET_FILE, VOCAB_FILE,
                         device_id=DEVICE_ID)
   beam_size = 1

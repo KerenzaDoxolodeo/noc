@@ -33,7 +33,7 @@ class fc7SequenceGenerator(SequenceGenerator):
         image_ids = infd.read().splitlines()
       self.image_ids = dict.fromkeys(image_ids, 1)
       for poolfeatfile in featfiles:
-        print 'Reading features from file: %s' % poolfeatfile
+        print('Reading features from file: %s' % poolfeatfile)
         with open(poolfeatfile, 'rb') as poolfd:
           # each line has the fc7 mean of 1 video
           for line in poolfd:
@@ -47,7 +47,7 @@ class fc7SequenceGenerator(SequenceGenerator):
               self.vid_poolfeats[img_id].append(line)
 
       for sentfile in sentfiles:
-        print 'Reading sentences in: %s' % sentfile
+        print('Reading sentences in: %s' % sentfile)
         with open(sentfile, 'r') as sentfd:
           for line in sentfd:
             line = line.strip()
@@ -60,9 +60,9 @@ class fc7SequenceGenerator(SequenceGenerator):
             if img_id in self.image_ids:
               self.lines.append((img_id, id_sent[1]))
         if num_empty_lines > 0:
-          print 'Warning: ignoring %d empty lines.' % num_empty_lines
+          print('Warning: ignoring %d empty lines.' % num_empty_lines)
       for labelfile in label_files:
-        print 'Reading labels in: %s' % labelfile
+        print('Reading labels in: %s' % labelfile)
         with open(labelfile, 'r') as sentfd:
           for line in sentfd:
             line = line.strip()
@@ -105,12 +105,12 @@ class fc7SequenceGenerator(SequenceGenerator):
     return self.num_resets > 0
 
   def init_vocabulary(self, vocab_filename):
-    print "Initializing the vocabulary."
+    print("Initializing the vocabulary.")
     if os.path.isfile(vocab_filename):
       with open(vocab_filename, 'rb') as vocab_file:
         self.init_vocab_from_file(vocab_file)
     else:
-      print "Error: No vocab file!"
+      print("Error: No vocab file!")
 
   def init_vocab_from_file(self, vocab_filedes):
     # initialize the vocabulary with the UNK word
@@ -120,7 +120,7 @@ class fc7SequenceGenerator(SequenceGenerator):
     for line in vocab_filedes.readlines():
       split_line = line.split()
       word = split_line[0]
-      print word
+      print(word)
       #if unicode(word) == UNK_IDENTIFIER:
       if word == UNK_IDENTIFIER:
         continue
@@ -129,14 +129,14 @@ class fc7SequenceGenerator(SequenceGenerator):
       num_words_dataset += 1
       self.vocabulary[word] = len(self.vocabulary_inverted)
       self.vocabulary_inverted.append(word)
-    num_words_vocab = len(self.vocabulary.keys())
-    print ('Initialized vocabulary from file with %d unique words ' +
+    num_words_vocab = len(list(self.vocabulary.keys()))
+    print(('Initialized vocabulary from file with %d unique words ' +
            '(from %d total words in dataset).') % \
-          (num_words_vocab, num_words_dataset)
+          (num_words_vocab, num_words_dataset))
     assert len(self.vocabulary_inverted) == num_words_vocab
 
   def dump_video_file(self, vidid_order_file, frame_seq_label_file):
-    print 'Dumping vidid order to file: %s' % vidid_order_file
+    print('Dumping vidid order to file: %s' % vidid_order_file)
     with open(vidid_order_file,'wb') as vidid_file:
       for vidid, line in self.lines:
         word_count = len(line.split())
@@ -148,13 +148,13 @@ class fc7SequenceGenerator(SequenceGenerator):
     # with open(frame_seq_label_file,'wb') as frame_file:
     #   for frame_path, label in self.frame_list:
     #     frame_file.write('%s %d\n' % (frame_path, label)) 
-    print 'Done.' 
+    print('Done.') 
 
   def next_line(self):
     num_lines = float(len(self.lines))
     if self.line_index == 1 or self.line_index == num_lines or self.line_index % 10000 == 0:
-      print 'Processed %d/%d (%f%%) lines' % (self.line_index, num_lines,
-                                              100 * self.line_index / num_lines)
+      print('Processed %d/%d (%f%%) lines' % (self.line_index, num_lines,
+                                              100 * self.line_index / num_lines))
     self.line_index += 1
     if self.line_index == num_lines:
       self.line_index = 0
@@ -173,7 +173,7 @@ class fc7SequenceGenerator(SequenceGenerator):
     return label_arr
 
   def float_line_to_stream(self, line):
-    return map(float, line.split(','))
+    return list(map(float, line.split(',')))
 
   # we have pooled fc7 features already in the file
   def get_streams(self):
@@ -216,7 +216,7 @@ class TextSequenceGenerator(SequenceGenerator):
     return self.num_resets > 0
 
   def init_vocabulary(self, vocab_filename):
-    print "Initializing the vocabulary."
+    print("Initializing the vocabulary.")
     if os.path.isfile(vocab_filename):
       with open(vocab_filename, 'rb') as vocab_file:
         self.init_vocab_from_file(vocab_file)
@@ -232,7 +232,7 @@ class TextSequenceGenerator(SequenceGenerator):
     for line in vocab_filedes.readlines():
       split_line = line.split()
       word = split_line[0]
-      print word
+      print(word)
       #if unicode(word) == UNK_IDENTIFIER:
       if word == UNK_IDENTIFIER:
         continue
@@ -241,14 +241,14 @@ class TextSequenceGenerator(SequenceGenerator):
       num_words_dataset += 1
       self.vocabulary[word] = len(self.vocabulary_inverted)
       self.vocabulary_inverted.append(word)
-    num_words_vocab = len(self.vocabulary.keys())
-    print ('Initialized vocabulary from file with %d unique words ' +
+    num_words_vocab = len(list(self.vocabulary.keys()))
+    print(('Initialized vocabulary from file with %d unique words ' +
            '(from %d total words in dataset).') % \
-          (num_words_vocab, num_words_dataset)
+          (num_words_vocab, num_words_dataset))
     assert len(self.vocabulary_inverted) == num_words_vocab
 
   def init_vocabulary_from_data(self, vocab_filename):
-    print 'Initializing the vocabulary from full data'
+    print('Initializing the vocabulary from full data')
     assert len(self.lines) > 0
     # initialize the vocabulary with the UNK word if new
     self.vocabulary = {UNK_IDENTIFIER: 0}
@@ -268,26 +268,26 @@ class TextSequenceGenerator(SequenceGenerator):
           self.vocabulary[word] = len(self.vocab_counts)
           self.vocab_counts.append(1)
           
-    num_words_vocab = len(self.vocabulary.keys())
-    print ('Initialized the vocabulary from data with %d unique words ' +
-           '(from %d total words in dataset).') % (num_words_vocab, num_words_dataset)
+    num_words_vocab = len(list(self.vocabulary.keys()))
+    print(('Initialized the vocabulary from data with %d unique words ' +
+           '(from %d total words in dataset).') % (num_words_vocab, num_words_dataset))
     assert len(self.vocab_counts) == num_words_vocab
     assert len(self.vocabulary_inverted) == num_words_vocab
     if self.vocab_counts[self.vocabulary[UNK_IDENTIFIER]] == 0:
-      print 'Warning: the count for the UNK identifier "%s" was 0.' % UNK_IDENTIFIER
+      print('Warning: the count for the UNK identifier "%s" was 0.' % UNK_IDENTIFIER)
 
   def dump_vocabulary(self, vocab_filename):
-    print 'Dumping vocabulary to file: %s' % vocab_filename
+    print('Dumping vocabulary to file: %s' % vocab_filename)
     with open(vocab_filename, 'wb') as vocab_file:
       for word in self.vocabulary_inverted:
         vocab_file.write('%s\n' % word)
-    print 'Done.'
+    print('Done.')
 
   def next_line(self):
     num_lines = float(len(self.lines))
     if self.line_index == 1 or self.line_index == num_lines or self.line_index % 10000 == 0:
-      print 'Processed %d/%d (%f%%) lines' % (self.line_index, num_lines,
-                                              100 * self.line_index / num_lines)
+      print('Processed %d/%d (%f%%) lines' % (self.line_index, num_lines,
+                                              100 * self.line_index / num_lines))
     self.line_index += 1
     if self.line_index == num_lines:
       self.line_index = 0
@@ -314,7 +314,7 @@ class TextSequenceGenerator(SequenceGenerator):
     pad = self.max_words - (len(stream) + 1) if self.pad else 0
     truncated = False
     if pad < 0:
-      print 'Video id: {0} Num words: {1}'.format(vidid, len(stream))
+      print('Video id: {0} Num words: {1}'.format(vidid, len(stream)))
       # truncate words to max
       stream = stream[:self.max_words-1]
       truncated = True
@@ -371,7 +371,7 @@ def preprocess_dataset(split_name, data_split_name, batch_stream_length, aligned
     label_file = [LABEL_FILE_PATTERN.format('vallstm2014'),
                   LABEL_FILE_PATTERN.format('mytest')]
   else:
-    print 'Error. Invalid data_split_name: %s' % data_split_name
+    print('Error. Invalid data_split_name: %s' % data_split_name)
     return
   filenames = [(imgid_file, feat_files, sent_files, label_file)]
 
@@ -394,7 +394,7 @@ def preprocess_dataset(split_name, data_split_name, batch_stream_length, aligned
   writer.write_to_exhaustion()
   writer.write_filelists()
   if not os.path.isfile(vocab_filename):
-    print "Vocabulary not found"
+    print("Vocabulary not found")
 
 def process_splits():
   DATASETS = [ # split_name, data_split_name, aligned

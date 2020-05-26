@@ -36,7 +36,7 @@ class SequenceGenerator():
     if self.streams[stream_index] is None:
       self.streams[stream_index] = {}
     stream_length = len(streams[stream_names[0]])
-    for k, v in streams.iteritems():
+    for k, v in streams.items():
       if isinstance(v, np.ndarray):
         assert stream_length == v.shape[0]
       else:
@@ -90,8 +90,8 @@ class SequenceGenerator():
             num_completed_streams += 1
         if not exhausted[i]: all_exhausted = False
       if all_exhausted and truncate_at_exhaustion:
-        print ('Exhausted all data; cutting off batch at timestep %d ' +
-               'with %d streams completed') % (t, num_completed_streams)
+        print(('Exhausted all data; cutting off batch at timestep %d ' +
+               'with %d streams completed') % (t, num_completed_streams))
         for name in self.substream_names:
           batch[name] = batch[name][:t, :]
         batch_indicators = batch_indicators[:t, :]
@@ -123,11 +123,11 @@ class HDF5SequenceWriter():
     dataset[:] = cont_indicators
     dataset = h5file.create_dataset('buffer_size', shape=(1,), dtype=np.int)
     dataset[:] = self.generator.batch_num_streams
-    for key, batch in batch_comps.iteritems():
+    for key, batch in batch_comps.items():
       if self.verbose:
         for s in range(self.generator.batch_num_streams):
           stream = np.array(self.generator.streams[s][key])
-          print 'batch %d, stream %s, index %d: ' % (batch_index, key, s), stream
+          print('batch %d, stream %s, index %d: ' % (batch_index, key, s), stream)
       h5dataset = h5file.create_dataset(key, shape=batch.shape, dtype=batch.dtype)
       h5dataset[:] = batch
     h5file.close()

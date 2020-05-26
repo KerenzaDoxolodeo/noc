@@ -48,7 +48,7 @@ class CocoSequenceGenerator(SequenceGenerator):
     known_images = {}
     self.coco = coco
     if split_ids is None:
-      split_ids = list(coco.imgs.keys())
+      split_ids = coco.imgs.keys()
     self.image_path_to_id = {}
     for image_id in split_ids:
       image_info = coco.imgs[image_id]
@@ -66,9 +66,9 @@ class CocoSequenceGenerator(SequenceGenerator):
           known_images[image_id]['sentences'] = []
       else:
         num_missing += 1
-        print('Warning (#%d): image not found: %s' % (num_missing, image_path))
+        print 'Warning (#%d): image not found: %s' % (num_missing, image_path)
       num_total += 1
-    print('%d/%d images missing' % (num_missing, num_total))
+    print '%d/%d images missing' % (num_missing, num_total)
     if vocab is None:
       self.init_vocabulary(known_images)
     else:
@@ -78,10 +78,10 @@ class CocoSequenceGenerator(SequenceGenerator):
         self.vocabulary[word] = index
     self.image_sentence_pairs = []
     num_no_sentences = 0
-    for image_filename, metadata in known_images.items():
+    for image_filename, metadata in known_images.iteritems():
       if not metadata['sentences']:
         num_no_sentences += 1
-        print('Warning (#%d): image with no sentences: %s' % (num_no_sentences, image_filename))
+        print 'Warning (#%d): image with no sentences: %s' % (num_no_sentences, image_filename)
       for sentence in metadata['sentences']:
         self.image_sentence_pairs.append((metadata['path'], sentence))
     self.index = 0
@@ -114,7 +114,7 @@ class CocoSequenceGenerator(SequenceGenerator):
 
   def init_vocabulary(self, image_annotations, min_count=5):
     words_to_count = {}
-    for image_id, annotations in image_annotations.items():
+    for image_id, annotations in image_annotations.iteritems():
       for annotation in annotations['sentences']:
         for word in annotation:
           word = word.strip()
@@ -122,10 +122,10 @@ class CocoSequenceGenerator(SequenceGenerator):
             words_to_count[word] = 0
           words_to_count[word] += 1
     # Sort words by count, then alphabetically
-    words_by_count = sorted(list(words_to_count.keys()), key=lambda w: (-words_to_count[w], w))
-    print('Initialized vocabulary with %d words; top 10 words:' % len(words_by_count))
+    words_by_count = sorted(words_to_count.keys(), key=lambda w: (-words_to_count[w], w))
+    print 'Initialized vocabulary with %d words; top 10 words:' % len(words_by_count)
     for word in words_by_count[:10]:
-      print('\t%s (%d)' % (word, words_to_count[word]))
+      print '\t%s (%d)' % (word, words_to_count[word])
     # Add words to vocabulary
     self.vocabulary = {UNK_IDENTIFIER: 0}
     self.vocabulary_inverted = [UNK_IDENTIFIER]
@@ -135,34 +135,34 @@ class CocoSequenceGenerator(SequenceGenerator):
         break
       self.vocabulary_inverted.append(word)
       self.vocabulary[word] = index + 1
-    print('Final vocabulary (restricted to words with counts of %d+) has %d words' % \
-        (min_count, len(self.vocabulary)))
+    print 'Final vocabulary (restricted to words with counts of %d+) has %d words' % \
+        (min_count, len(self.vocabulary))
 
   def dump_vocabulary(self, vocab_filename):
-    print('Dumping vocabulary to file: %s' % vocab_filename)
+    print 'Dumping vocabulary to file: %s' % vocab_filename
     with open(vocab_filename, 'wb') as vocab_file:
       for word in self.vocabulary_inverted:
         vocab_file.write('%s\n' % word)
-    print('Done.')
+    print 'Done.'
 
   def dump_image_file(self, image_filename, dummy_image_filename=None):
-    print('Dumping image list to file: %s' % image_filename)
+    print 'Dumping image list to file: %s' % image_filename
     with open(image_filename, 'wb') as image_file:
       for image_path, _ in self.image_list:
         image_file.write('%s\n' % image_path)
     if dummy_image_filename is not None:
-      print('Dumping image list with dummy labels to file: %s' % dummy_image_filename)
+      print 'Dumping image list with dummy labels to file: %s' % dummy_image_filename
       with open(dummy_image_filename, 'wb') as image_file:
         for path_and_hash in self.image_list:
           image_file.write('%s %d\n' % path_and_hash)
-    print('Done.')
+    print 'Done.'
 
   def next_line(self):
     num_lines = float(len(self.image_sentence_pairs))
     self.index += 1
     if self.index == 1 or self.index == num_lines or self.index % 10000 == 0:
-      print('Processed %d/%d (%f%%) lines' % (self.index, num_lines,
-                                              100 * self.index / num_lines))
+      print 'Processed %d/%d (%f%%) lines' % (self.index, num_lines,
+                                              100 * self.index / num_lines)
     if self.index == num_lines:
       self.index = 0
       self.num_resets += 1
@@ -195,7 +195,7 @@ class CocoSequenceGenerator(SequenceGenerator):
     out['target_sentence'] = stream + [0] + [-1] * pad
     truncated = False
     if self.truncate:
-      for key, val in out.items():
+      for key, val in out.iteritems():
         if len(val) > self.max_words:
           out[key] = val[:self.max_words]
           truncated = True
@@ -248,8 +248,8 @@ def process_dataset(split_name, coco_split_name, batch_stream_length,
   num_outs = sg.num_outs
   num_pads = sg.num_pads
   num_truncates = sg.num_truncates
-  print('Padded %d/%d sequences; truncated %d/%d sequences' % \
-      (num_pads, num_outs, num_truncates, num_outs))
+  print 'Padded %d/%d sequences; truncated %d/%d sequences' % \
+      (num_pads, num_outs, num_truncates, num_outs)
   return sg.vocabulary_inverted
 
 def process_coco(include_trainval=False):

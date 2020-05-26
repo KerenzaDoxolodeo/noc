@@ -2,7 +2,7 @@ DEVICE_ID = 0
 
 from collections import OrderedDict
 import argparse
-import pickle as pickle
+import cPickle as pickle
 import h5py
 import math
 import matplotlib.pyplot as plt
@@ -22,7 +22,7 @@ UNK_IDENTIFIER = 'unk'
 
 
 def init_vocab_from_file(vocab_filename):
-  print("Initializing vocabulary from %s ..." % vocab_filename)
+  print "Initializing vocabulary from %s ..." % vocab_filename
   vocabulary = {}
   vocabulary_inverted = []
   if os.path.isfile(vocab_filename):
@@ -34,7 +34,7 @@ def init_vocab_from_file(vocab_filename):
       for line in vocab_filedes.readlines():
         split_line = line.split()
         word = split_line[0]
-        print(word)
+        print word
         #if unicode(word) == UNK_IDENTIFIER:
         if word == UNK_IDENTIFIER:
           continue
@@ -43,13 +43,13 @@ def init_vocab_from_file(vocab_filename):
         num_words_dataset += 1
         vocabulary[word] = len(vocabulary_inverted)
         vocabulary_inverted.append(word)
-      num_words_vocab = len(list(vocabulary.keys()))
-      print(('Initialized vocabulary from file with %d unique words ' +
+      num_words_vocab = len(vocabulary.keys())
+      print ('Initialized vocabulary from file with %d unique words ' +
              '(from %d total words in dataset).') % \
-            (num_words_vocab, num_words_dataset))
+            (num_words_vocab, num_words_dataset)
       assert len(vocabulary_inverted) == num_words_vocab
   else:
-    print(('Vocabulary file %s does not exist' % vocab_filename))
+    print('Vocabulary file %s does not exist' % vocab_filename)
   return vocabulary, vocabulary_inverted
 
 def vocab_inds_to_sentence(vocab, inds):
@@ -154,7 +154,7 @@ def predict_image_caption_beam_search(net, mean_pool_fc7, vocab_list, strategy, 
   while beams_complete < len(beams):
     expansions = []
     for beam_index, beam_log_prob, beam in \
-        zip(list(range(len(beams))), beam_log_probs, beams):
+        zip(range(len(beams)), beam_log_probs, beams):
       if beam:
         previous_word = beam[-1]
         if len(beam) >= max_length or previous_word == 0:
@@ -239,9 +239,9 @@ def all_video_gt_pairs(fsg):
       else:
         data[video_id] = [gt]
       prev_video_id = video_id
-    print('Found %d videos with %d captions' % (len(list(data.keys())), len(list(data.values()))))
+    print 'Found %d videos with %d captions' % (len(data.keys()), len(data.values()))
   else:
-    data = OrderedDict(((key, []) for key in list(fsg.vid_poolfeats.keys())))
+    data = OrderedDict(((key, []) for key in fsg.vid_poolfeats.keys()))
   return data
 
 def gen_stats(prob, normalizer=None):
@@ -274,7 +274,7 @@ def run_pred_iters(pred_net, image_list, feature_extractor,
   outputs = OrderedDict()
   num_pairs = 0
   descriptor_video_id = ''
-  print("CNN ...")
+  print "CNN ..."
   features = feature_extractor.compute_features(image_list)
   for index, video_id in enumerate(image_list):
     assert video_id not in outputs
@@ -297,8 +297,8 @@ def run_pred_iters(pred_net, image_list, feature_extractor,
           stats = gen_stats(prob)
           output['stats'] = stats
         stats = output['stats']
-        print('%s caption (length %d, log_p = %f, log_p_word = %f):\n%s' % \
-            (tag, stats['length'], stats['log_p'], stats['log_p_word'], caption_string))
+        print '%s caption (length %d, log_p = %f, log_p_word = %f):\n%s' % \
+            (tag, stats['length'], stats['log_p'], stats['log_p_word'], caption_string)
   return outputs
 
 def to_html_row(columns, header=False):
@@ -320,7 +320,7 @@ def to_html_row(columns, header=False):
 
 def to_html_output(outputs, vocab):
   out = ''
-  for video_id, captions in outputs.items():
+  for video_id, captions in outputs.iteritems():
     for c in captions:
       if not 'stats' in c:
         c['stats'] = gen_stats(c['prob'])
@@ -363,7 +363,7 @@ def to_html_output(outputs, vocab):
 
 def to_text_output(outputs, vocab):
   out_types = {}
-  caps = outputs[list(outputs.keys())[0]]
+  caps = outputs[outputs.keys()[0]]
   for c in caps:
     caption, gt, source = \
         c['caption'], c['gt'], c['source']
@@ -377,7 +377,7 @@ def to_text_output(outputs, vocab):
       out_types[source_meta] = []
   num_videos = 0
   out = ''
-  for video_id, captions in outputs.items():
+  for video_id, captions in outputs.iteritems():
     num_videos += 1
     for c in captions:
       if not 'stats' in c:
@@ -414,10 +414,10 @@ def compute_descriptors(net, image_list, output_name='fc7'):
     batch_list = image_list[batch_start_index:(batch_start_index + batch_size)]
     for batch_index, image_path in enumerate(batch_list):
       batch[batch_index:(batch_index + 1)] = preprocess_image(net, image_path)
-    print('Computing descriptors for images %d-%d of %d' % \
-        (batch_start_index, batch_start_index + batch_size - 1, len(image_list)))
+    print 'Computing descriptors for images %d-%d of %d' % \
+        (batch_start_index, batch_start_index + batch_size - 1, len(image_list))
     net.forward(data=batch)
-    print('Done')
+    print 'Done'
     descriptors[batch_start_index:(batch_start_index + batch_size)] = \
         net.blobs[output_name].data
   return descriptors
@@ -458,7 +458,7 @@ def sample_captions(net, image_features,
         output_captions[index].append(next_word_sample)
         output_probs[index].append(net_output_probs[index, next_word_sample])
         if next_word_sample == 0: num_done += 1
-    print('%d/%d done after word %d' % (num_done, batch_size, caption_index))
+    print '%d/%d done after word %d' % (num_done, batch_size, caption_index)
     caption_index += 1
   for prob, caption in zip(output_probs, output_captions):
     output = {}
@@ -471,10 +471,10 @@ def sample_captions(net, image_features,
 
 def load_weights_from_h5(net_object, h5_weights_file):
   h5_weights = h5py.File(h5_weights_file)
-  for layer in list(net_object.params.keys()):
-    assert layer in list(h5_weights['data'].keys())
+  for layer in net_object.params.keys():
+    assert layer in h5_weights['data'].keys()
     num_axes = np.shape(net_object.params[layer])[0]
-    wgt_axes = list(h5_weights['data'][layer].keys())
+    wgt_axes = h5_weights['data'][layer].keys()
     assert num_axes == len(wgt_axes)
     for axis in range(num_axes):
       net_object.params[layer][axis].data[:] = h5_weights['data'][layer][wgt_axes[axis]]
@@ -505,13 +505,13 @@ def main():
     caffe.set_device(DEVICE_ID)
   else:
     caffe.set_mode_cpu()
-  print("Setting up CNN...")
+  print "Setting up CNN..."
   feature_extractor = FeatureExtractor(args.vggmodel, VGG_NET_FILE, DEVICE_ID)
-  print("Setting up LSTM NET")
+  print "Setting up LSTM NET"
   lstm_net = caffe.Net(LSTM_NET_FILE, MODEL_FILE, caffe.TEST)
   if MODEL_FILE.endswith('.h5'):
     load_weights_from_h5(lstm_net, MODEL_FILE)
-  print("Done")
+  print "Done"
   nets = [lstm_net]
 
 
@@ -529,8 +529,8 @@ def main():
   with open(args.imagelist, 'r') as infd:
     image_list = infd.read().splitlines()
 
-  print('Captioning %d images...' % len(image_list))
-  NUM_CHUNKS = (len(image_list)//NUM_OUT_PER_CHUNK) + 1 # num videos in batches of 30
+  print 'Captioning %d images...' % len(image_list)
+  NUM_CHUNKS = (len(image_list)/NUM_OUT_PER_CHUNK) + 1 # num videos in batches of 30
   eos_string = '<EOS>'
   # add english inverted vocab 
   vocab_list = [eos_string] + vocabulary_inverted
@@ -546,9 +546,9 @@ def main():
         (RESULTS_DIR, data_split_name, NET_TAG)
     if not os.path.exists(RESULTS_DIR): os.makedirs(RESULTS_DIR)
     if os.path.exists(text_out_filename):
-      print('(%d-%d) Appending to file: %s' % (chunk_start, chunk_end, text_out_filename))
+      print '(%d-%d) Appending to file: %s' % (chunk_start, chunk_end, text_out_filename)
     else:
-      print('Text output will be written to:', text_out_filename)
+      print 'Text output will be written to:', text_out_filename
     outputs = run_pred_iters(lstm_net, chunk, feature_extractor,
                              strategies=STRATEGIES, display_vocab=vocab_list)
     if args.htmlout:
@@ -563,7 +563,7 @@ def main():
       text_out_file.write(''.join(text_out_types[strat_type]))
       text_out_file.close()
     offset += NUM_OUT_PER_CHUNK
-    print('Wrote HTML output to:', html_out_filename)
+    print 'Wrote HTML output to:', html_out_filename
 
 if __name__ == "__main__":
  main()

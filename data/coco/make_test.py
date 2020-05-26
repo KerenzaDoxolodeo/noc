@@ -18,9 +18,9 @@ out_filename = '%s/coco/annotations/captions_%s.json' % (script_dir, set_name)
 image_ext = 'jpg'
 imname_re = re.compile('COCO_%s_(?P<image_id>\d+)\.%s' % (set_name, image_ext))
 full_image_ext = '.%s' % image_ext
-image_filenames = filter(lambda f: f.endswith(full_image_ext), os.listdir(image_root))
-print 'Creating dummy annotation file for %d images at: %s' % \
-    (len(image_filenames), out_filename)
+image_filenames = [f for f in os.listdir(image_root) if f.endswith(full_image_ext)]
+print('Creating dummy annotation file for %d images at: %s' % \
+    (len(image_filenames), out_filename))
 
 out_data = {'type': 'captions', 'images': [], 'annotations': [],
             'licenses': [], 'info': {}}
